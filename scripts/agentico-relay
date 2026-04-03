@@ -1,13 +1,13 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════════════════════
-# AGENTIC RELAY - File-based auto-relay for QB → specialist prompt distribution
-# Usage: agentic-relay start --project NAME
-#        agentic-relay stop --project NAME
-#        agentic-relay status [--project NAME]
+# AGENTICO RELAY - File-based auto-relay for QB → specialist prompt distribution
+# Usage: agentico-relay start --project NAME
+#        agentico-relay stop --project NAME
+#        agentico-relay status [--project NAME]
 # ═══════════════════════════════════════════════════════════════════════════════
 
-RELAY_BASE="/tmp/agentic-relay"
-SESSION="agentic"
+RELAY_BASE="/tmp/agentico-relay"
+SESSION="agentico"
 POLL_INTERVAL=2
 COMMIT_SUFFIX="Commit all changes when you finish. Do not test."
 
@@ -76,7 +76,7 @@ cmd_start() {
             *) shift ;;
         esac
     done
-    [ -z "$project" ] && die "Usage: agentic-relay start --project NAME"
+    [ -z "$project" ] && die "Usage: agentico-relay start --project NAME"
 
     local dir
     dir=$(get_project_dir "$project")
@@ -97,7 +97,7 @@ cmd_start() {
 
     # Verify pane map exists
     if [ ! -f "$dir/pane-map.json" ]; then
-        die "No pane-map.json found for $project. Start agentic with auto-relay enabled."
+        die "No pane-map.json found for $project. Start agentico with auto-relay enabled."
     fi
 
     # Fork into background
@@ -186,10 +186,10 @@ while true; do
             prompt_text=$(cat "$promptfile")
             prompt_text="$prompt_text
 
-When you finish and before you commit, write your output summary: agentic-bulletin-write $project $specialist 'file1,file2' 'Export1,Export2' 'one sentence summary'.
+When you finish and before you commit, write your output summary: agentico-bulletin-write $project $specialist 'file1,file2' 'Export1,Export2' 'one sentence summary'.
 $COMMIT_SUFFIX
-After you commit, mark yourself done: touch /tmp/agentic-bulletin/$project/${specialist}.done
-If your task was non-trivial, save a skill: agentic-skill-write $specialist 'what you built' 'how you built it in 2-3 sentences' 'file1,file2'."
+After you commit, mark yourself done: touch /tmp/agentico-bulletin/$project/${specialist}.done
+If your task was non-trivial, save a skill: agentico-skill-write $specialist 'what you built' 'how you built it in 2-3 sentences' 'file1,file2'."
 
             # Deliver to pane
             send_to_pane "$pane_target" "$prompt_text"
@@ -251,7 +251,7 @@ cmd_stop() {
             *) shift ;;
         esac
     done
-    [ -z "$project" ] && die "Usage: agentic-relay stop --project NAME"
+    [ -z "$project" ] && die "Usage: agentico-relay stop --project NAME"
 
     local dir
     dir=$(get_project_dir "$project")
@@ -358,5 +358,5 @@ case "${1:-}" in
     start)  shift; cmd_start "$@" ;;
     stop)   shift; cmd_stop "$@" ;;
     status) shift; cmd_status "$@" ;;
-    *)      echo "Usage: agentic-relay {start|stop|status} [--project NAME]"; exit 1 ;;
+    *)      echo "Usage: agentico-relay {start|stop|status} [--project NAME]"; exit 1 ;;
 esac

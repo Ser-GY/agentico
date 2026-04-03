@@ -1,9 +1,9 @@
 #!/bin/bash
 # Display total session token stats for tmux status bar
-# Shows: Agentic cost vs Single-agent estimate
+# Shows: Agentico cost vs Single-agent estimate
 
-METRICS_FILE="$HOME/.config/agentic-metrics.json"
-CONFIG_FILE="$HOME/.config/agentic-config.json"
+METRICS_FILE="$HOME/.config/agentico-metrics.json"
+CONFIG_FILE="$HOME/.config/agentico-config.json"
 
 # Check if display is enabled (default: true if not set)
 if [ -f "$CONFIG_FILE" ]; then
@@ -23,7 +23,12 @@ fi
 # Use tmux session creation time as session key (matches capture-tokens hook)
 SESSION_CREATED=$(tmux display-message -p '#{session_created}' 2>/dev/null)
 if [ -n "$SESSION_CREATED" ]; then
-    SESSION_KEY=$(date -u -r "$SESSION_CREATED" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null)
+    # Cross-platform: macOS uses -r, Linux uses -d @
+    if [[ "$(uname)" == "Darwin" ]]; then
+        SESSION_KEY=$(date -u -r "$SESSION_CREATED" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null)
+    else
+        SESSION_KEY=$(date -u -d "@$SESSION_CREATED" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null)
+    fi
 else
     SESSION_KEY=$(date -u +"%Y-%m-%dT%H:00:00Z")
 fi
@@ -57,13 +62,13 @@ fi
 # Sonnet pricing per million tokens:
 # Input: $3, Output: $15, Cache read: $0.30 (90% discount)
 
-# AGENTIC cost: actual cost paid (cache discounts are an API feature, not agentic)
+# AGENTICO cost: actual cost paid (cache discounts are an API feature, not agentico)
 AGENTIC_INPUT_COST=$(echo "scale=6; $INPUT * 0.000003 + $CACHE * 0.0000003" | bc 2>/dev/null || echo "0")
 AGENTIC_OUTPUT_COST=$(echo "scale=6; $OUTPUT * 0.000015" | bc 2>/dev/null || echo "0")
 AGENTIC_COST=$(printf "%.2f" $(echo "$AGENTIC_INPUT_COST + $AGENTIC_OUTPUT_COST" | bc 2>/dev/null || echo "0"))
 
 # SINGLE-AGENT estimate:
-# When only 1 agent works: same as agentic (no multi-agent benefit)
+# When only 1 agent works: same as agentico (no multi-agent benefit)
 # When N agents work: a single agent would carry ALL agents' context in one window,
 # so input tokens scale by N (each call includes everything instead of a slice)
 # Cache discounts still apply (it's an API feature either way)
@@ -77,4 +82,4 @@ else
 fi
 
 # Format output with colors for tmux status bar
-echo "#[fg=brightgreen,bold]agentic \$${AGENTIC_COST}#[default] vs #[fg=brightred,bold]single \$${SINGLE_COST}#[default]"
+echo "#[fg=brightgreen,bold]agentico \$${AGENTIC_COST}#[default] vs #[fg=brightred,bold]single \$${SINGLE_COST}#[default]"

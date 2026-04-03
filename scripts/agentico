@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # VERSION=4.7.0
 # ═══════════════════════════════════════════════════════════════════════════════
-# AGENTIC - Multi-agent tmux session manager
+# AGENTICO - Multi-agent tmux session manager
 # Layout: QB full width on top, specialists below (auto 2-row for 6+)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -9,27 +9,27 @@
 # AUTO-UPDATE CHECK
 # ═══════════════════════════════════════════════════════════════════════════════
 AGENTIC_VERSION="4.7.0"
-UPDATE_URL="https://github.com/EliCrossDev/agentic/releases/latest/download/agentic-macos-arm64.tar.gz"
+UPDATE_URL="https://github.com/Ser-GY/agentico/releases/latest/download/agentico-linux-x86_64.tar.gz"
 
 if [[ "$*" != *"--no-update"* ]]; then
     CONFIG_FILE="$HOME/.config/agents-projects.json"
     AUTO_UPDATE=$(jq -r '.settings.auto_update // true' "$CONFIG_FILE" 2>/dev/null)
     if [ "$AUTO_UPDATE" != "false" ]; then
-        REMOTE_VERSION=$(curl -fsSL --connect-timeout 3 --max-time 5 "https://raw.githubusercontent.com/EliCrossDev/agentic/main/VERSION" 2>/dev/null | tr -d '[:space:]')
+        REMOTE_VERSION=$(curl -fsSL --connect-timeout 3 --max-time 5 "https://raw.githubusercontent.com/Ser-GY/agentico/main/VERSION" 2>/dev/null | tr -d '[:space:]')
         if [ -n "$REMOTE_VERSION" ] && [ "$REMOTE_VERSION" != "$AGENTIC_VERSION" ] && [[ "$REMOTE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Updating agentic $AGENTIC_VERSION → $REMOTE_VERSION..."
+            echo "Updating agentico $AGENTIC_VERSION → $REMOTE_VERSION..."
             TEMP_DIR=$(mktemp -d)
-            if curl -fsSL --connect-timeout 5 --max-time 30 "$UPDATE_URL" -o "$TEMP_DIR/agentic.tar.gz" 2>/dev/null; then
-                tar -xzf "$TEMP_DIR/agentic.tar.gz" -C "$TEMP_DIR" 2>/dev/null
-                if [ -f "$TEMP_DIR/agentic" ]; then
+            if curl -fsSL --connect-timeout 5 --max-time 30 "$UPDATE_URL" -o "$TEMP_DIR/agentico.tar.gz" 2>/dev/null; then
+                tar -xzf "$TEMP_DIR/agentico.tar.gz" -C "$TEMP_DIR" 2>/dev/null
+                if [ -f "$TEMP_DIR/agentico" ]; then
                     for bin in "$TEMP_DIR"/*; do
                         local_name=$(basename "$bin")
-                        [ "$local_name" = "agentic.tar.gz" ] && continue
+                        [ "$local_name" = "agentico.tar.gz" ] && continue
                         [ -f "$bin" ] && cp "$bin" "$HOME/.local/bin/$local_name" && chmod +x "$HOME/.local/bin/$local_name"
                     done
                     rm -rf "$TEMP_DIR"
                     echo "Updated. Restarting..."
-                    exec "$HOME/.local/bin/agentic" "$@" --no-update
+                    exec "$HOME/.local/bin/agentico" "$@" --no-update
                 fi
             fi
             rm -rf "$TEMP_DIR"
@@ -38,7 +38,7 @@ if [[ "$*" != *"--no-update"* ]]; then
 fi
 set -- "${@/--no-update/}"
 
-SESSION="agentic"
+SESSION="agentico"
 CONFIG="$HOME/.config/agents-projects.json"
 LAST_PROJECT_FILE="$HOME/.config/agents-last-project"
 
@@ -107,7 +107,7 @@ while [[ $# -gt 0 ]]; do
         --slow) SLOW_MODE_FLAG="on"; shift ;;
         --fast) SLOW_MODE_FLAG="off"; shift ;;
         -h|--help)
-            echo "Usage: agentic [OPTIONS]"
+            echo "Usage: agentico [OPTIONS]"
             echo ""
             echo "Options:"
             echo "  -f, --fresh       (Default behavior - always starts fresh)"
@@ -130,7 +130,7 @@ done
 is_in_list() { echo ",$1," | grep -q ",$2,"; }
 
 # Check dependencies
-command -v jq &>/dev/null || { echo -e "${RED}Need jq: brew install jq${NC}"; exit 1; }
+command -v jq &>/dev/null || { echo -e "${RED}Need jq (e.g.: brew install jq | sudo apt install jq)${NC}"; exit 1; }
 
 # Create config if it doesn't exist
 if [ ! -f "$CONFIG" ]; then
@@ -1362,8 +1362,8 @@ Generate a SHORT PRD (under 60 lines) with these sections:
 Maximum brevity. No paragraphs. Bullet points only."
 
     # Call Claude with spinner
-    local tmp_prd="/tmp/agentic-prd-$$.md"
-    local tmp_prompt="/tmp/agentic-prompt-$$.txt"
+    local tmp_prd="/tmp/agentico-prd-$$.md"
+    local tmp_prompt="/tmp/agentico-prompt-$$.txt"
     echo "$prompt" > "$tmp_prompt"
     claude -p --model haiku --output-format text < "$tmp_prompt" > "$tmp_prd" 2>/dev/null &
     local claude_pid=$!
@@ -1707,7 +1707,7 @@ Output ONLY the markdown content, no code fences or explanations."
 
                 if command -v claude &>/dev/null; then
                     # Run claude in background and show progress bar
-                    local tmp_smartprompt="/tmp/agentic-smartprompt-$$.txt"
+                    local tmp_smartprompt="/tmp/agentico-smartprompt-$$.txt"
                     echo "$prompt" > "$tmp_smartprompt"
                     claude -p --model haiku --output-format text < "$tmp_smartprompt" > "$project_path/PRD.md" 2>/dev/null &
                     local pid=$!
@@ -1838,8 +1838,8 @@ Output ONLY valid JSON, nothing else."
 
     if command -v claude &>/dev/null; then
         local result
-        local tmp_result="/tmp/agentic-analyze-$$.txt"
-        local tmp_anzprompt="/tmp/agentic-anzprompt-$$.txt"
+        local tmp_result="/tmp/agentico-analyze-$$.txt"
+        local tmp_anzprompt="/tmp/agentico-anzprompt-$$.txt"
         echo "$prompt" > "$tmp_anzprompt"
         claude -p --model haiku --output-format text < "$tmp_anzprompt" > "$tmp_result" 2>/dev/null &
         local analyze_pid=$!
@@ -1853,7 +1853,7 @@ Output ONLY valid JSON, nothing else."
             # Extract JSON - use python to reliably parse JSON from mixed content
             local agents_csv
             # Write Python script to temp file to avoid escaping issues
-            cat > /tmp/agentic_parse.py << 'PYPARSEOF'
+            cat > /tmp/agentico_parse.py << 'PYPARSEOF'
 import sys, json
 
 text = sys.stdin.read()
@@ -1885,7 +1885,7 @@ try:
 except:
     pass
 PYPARSEOF
-            agents_csv=$(echo "$result" | python3 /tmp/agentic_parse.py 2>/dev/null)
+            agents_csv=$(echo "$result" | python3 /tmp/agentico_parse.py 2>/dev/null)
 
             if [[ -n "$agents_csv" && "$agents_csv" != "null" ]]; then
                 # Extract counts if available
@@ -1914,8 +1914,14 @@ open_in_cursor() {
     # Find workspace file
     local workspace_file="$project_path/${project_slug}.code-workspace"
 
-    # Check if Cursor is installed
-    if [ ! -d "/Applications/Cursor.app" ]; then
+    # Check if Cursor is installed (macOS: app bundle; Linux: cursor binary)
+    local cursor_found=false
+    if [[ "$(uname)" == "Darwin" ]] && [ -d "/Applications/Cursor.app" ]; then
+        cursor_found=true
+    elif command -v cursor &>/dev/null; then
+        cursor_found=true
+    fi
+    if [ "$cursor_found" = false ]; then
         echo -e "  ${RED}✗${NC} Cursor not found. Install from https://cursor.sh"
         echo -e "  ${GRAY}Falling back to Terminal...${NC}"
         sleep 2
@@ -1923,12 +1929,22 @@ open_in_cursor() {
         return 1
     fi
 
+    # Cross-platform open: macOS uses 'open -a', Linux uses 'cursor' directly
+    open_cursor() {
+        local path="$1"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            open -a "Cursor" "$path"
+        else
+            cursor "$path" &>/dev/null &
+        fi
+    }
+
     if [ ! -f "$workspace_file" ]; then
         echo -e "  ${YELLOW}⚠${NC} No workspace file found, opening folder directly"
-        open -a "Cursor" "$project_path"
+        open_cursor "$project_path"
     else
         echo -e "  ${GREEN}✓${NC} Opening $project_name in Cursor..."
-        open -a "Cursor" "$workspace_file"
+        open_cursor "$workspace_file"
     fi
 
     echo ""
@@ -3135,8 +3151,8 @@ Or return: none
 
 Your agent list:"
 
-        local tmp_agents="/tmp/agentic-agents-$$.txt"
-        local tmp_aprompt="/tmp/agentic-aprompt-$$.txt"
+        local tmp_agents="/tmp/agentico-agents-$$.txt"
+        local tmp_aprompt="/tmp/agentico-aprompt-$$.txt"
         echo "$analysis_prompt" > "$tmp_aprompt"
         claude -p --model haiku --output-format text < "$tmp_aprompt" > "$tmp_agents" 2>/dev/null &
         local analyze_pid=$!
@@ -4655,7 +4671,7 @@ generate_wave_plan() {
     local project_name="$3"
 
     # Create waves directory
-    local waves_dir="/tmp/agentic-waves/${project_name}"
+    local waves_dir="/tmp/agentico-waves/${project_name}"
     mkdir -p "$waves_dir"
 
     # Convert prompt to lowercase for matching
@@ -4863,28 +4879,37 @@ for ((i=0; i<NUM_PROJECTS; i++)); do
         # Let panes close when their process exits (allows TeamCreate sub-agents to clean up)
         # Agentic specialist panes stay alive because Claude Code is interactive and keeps running
         tmux set-option -t $SESSION remain-on-exit off
-        # Copy to system clipboard on mouse drag end
-        tmux bind-key -T copy-mode MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "pbcopy"
-        tmux bind-key -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "pbcopy"
+        # Copy to system clipboard on mouse drag end (cross-platform)
+        if command -v pbcopy &>/dev/null; then
+            _CLIP_CMD="pbcopy"
+        elif command -v xclip &>/dev/null; then
+            _CLIP_CMD="xclip -selection clipboard"
+        elif command -v xsel &>/dev/null; then
+            _CLIP_CMD="xsel --clipboard --input"
+        else
+            _CLIP_CMD="cat > /dev/null"
+        fi
+        tmux bind-key -T copy-mode MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "$_CLIP_CMD"
+        tmux bind-key -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "$_CLIP_CMD"
         # Add token stats, relay status (if enabled), and QUIT button to status bar
         if [ "$AUTO_RELAY" = "true" ]; then
-            tmux set-option -t $SESSION status-right '#(~/.local/bin/agentic-relay-status) #(~/.local/bin/agentic-session-stats) #[fg=colour196,bold][quit]#[default]'
+            tmux set-option -t $SESSION status-right '#(~/.local/bin/agentico-relay-status) #(~/.local/bin/agentico-session-stats) #[fg=colour196,bold][quit]#[default]'
             tmux set-option -t $SESSION status-right-length 80
         else
-            tmux set-option -t $SESSION status-right '#(~/.local/bin/agentic-session-stats) #[fg=colour196,bold][quit]#[default]'
+            tmux set-option -t $SESSION status-right '#(~/.local/bin/agentico-session-stats) #[fg=colour196,bold][quit]#[default]'
             tmux set-option -t $SESSION status-right-length 60
         fi
         tmux set-option -t $SESSION status-interval 5
         # Bind mouse click on [quit] button — set flag then kill session (goes to homepage)
-        tmux bind-key -n MouseDown1StatusRight run-shell "echo switch > /tmp/agentic-restart-flag; tmux kill-session -t $SESSION"
-        tmux bind-key -n MouseUp1StatusRight run-shell "echo switch > /tmp/agentic-restart-flag; tmux kill-session -t $SESSION"
+        tmux bind-key -n MouseDown1StatusRight run-shell "echo switch > /tmp/agentico-restart-flag; tmux kill-session -t $SESSION"
+        tmux bind-key -n MouseUp1StatusRight run-shell "echo switch > /tmp/agentico-restart-flag; tmux kill-session -t $SESSION"
         # Also bind Ctrl-Q as backup quit method
-        tmux bind-key -n C-q confirm-before -p "Kill agentic session? (y/n)" "run-shell 'echo switch > /tmp/agentic-restart-flag; tmux kill-session -t $SESSION'"
+        tmux bind-key -n C-q confirm-before -p "Kill agentico session? (y/n)" "run-shell 'echo switch > /tmp/agentico-restart-flag; tmux kill-session -t $SESSION'"
     fi
 
     # Set pane border options for THIS window (must be done per-window)
     tmux set-window-option -t "$SESSION:$NAME" pane-border-status top
-    tmux set-window-option -t "$SESSION:$NAME" pane-border-format '#[fg=cyan] #{b:pane_current_path} #[fg=colour245]│ #(~/.local/bin/agentic-pane-stats #{pane_id}) #[default]'
+    tmux set-window-option -t "$SESSION:$NAME" pane-border-format '#[fg=cyan] #{b:pane_current_path} #[fg=colour245]│ #(~/.local/bin/agentico-pane-stats #{pane_id}) #[default]'
     tmux set-window-option -t "$SESSION:$NAME" pane-active-border-style 'fg=cyan'
     tmux set-window-option -t "$SESSION:$NAME" pane-border-style 'fg=colour238'
     sleep 0.2
@@ -4995,7 +5020,7 @@ for ((i=0; i<NUM_PROJECTS; i++)); do
 
     # Generate pane-map.json (always — used by QB for dispatch + relay when enabled)
     if [ $NUM_SPEC -gt 0 ]; then
-        RELAY_DIR="/tmp/agentic-relay/$NAME"
+        RELAY_DIR="/tmp/agentico-relay/$NAME"
         mkdir -p "$RELAY_DIR/queue" "$RELAY_DIR/sent"
         PANE_MAP="{"
         SPEC_LIST=""
@@ -5055,7 +5080,7 @@ You are the QB (Quarterback/Coordinator) for **$NAME**. Your specialist agents a
 ## Your Specialists
 $SPEC_LIST
 
-Pane map JSON: /tmp/agentic-relay/$NAME/pane-map.json
+Pane map JSON: /tmp/agentico-relay/$NAME/pane-map.json
 
 ---
 
@@ -5113,7 +5138,7 @@ Do these steps automatically — no need to ask the user for permission:
 
 **a. Restore the pane layout:**
 \`\`\`
-bash /tmp/agentic-relay/$NAME/restore-layout.sh
+bash /tmp/agentico-relay/$NAME/restore-layout.sh
 \`\`\`
 
 **b. Merge all branches into main:**
@@ -5141,7 +5166,7 @@ Do this for every specialist branch. If there are merge conflicts, report them t
    - Pure inline HTML/CSS/JS — no external dependencies, no CDN links
    - The layout should be clean and spacious — not cramped. Use generous padding and whitespace. Anyone should understand the full architecture in 30 seconds.
 4. Open it automatically: \`open $MAIN/STATE-MACHINE.html\` (macOS) or \`xdg-open $MAIN/STATE-MACHINE.html\` (Linux)
-5. Also save a copy to \`/tmp/agentic-diagrams/$NAME/iteration-{N}.html\`
+5. Also save a copy to \`/tmp/agentico-diagrams/$NAME/iteration-{N}.html\`
 
 If state_diagram setting is false or missing, skip this step entirely.
 
@@ -5190,14 +5215,14 @@ done
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Create idle display script in temp location (runs once at startup)
-IDLE_SCRIPT_DIR="/tmp/agentic-idle"
+IDLE_SCRIPT_DIR="/tmp/agentico-idle"
 mkdir -p "$IDLE_SCRIPT_DIR"
 
 # Generate the idle display script
 cat > "$IDLE_SCRIPT_DIR/idle.sh" << IDLESCRIPT
 #!/bin/bash
 SLOT="\$1"
-SESSION="agentic"
+SESSION="agentico"
 CLAUDE_CMD="$CLAUDE_CMD"
 sleep 0.5
 clear
@@ -5228,8 +5253,8 @@ while true; do
             ) &
             \$CLAUDE_CMD
             ;;
-        h|H) echo switch > /tmp/agentic-restart-flag; tmux detach-client; exit ;;
-        q|Q) echo switch > /tmp/agentic-restart-flag; tmux kill-session -t "\$SESSION" 2>/dev/null; exit ;;
+        h|H) echo switch > /tmp/agentico-restart-flag; tmux detach-client; exit ;;
+        q|Q) echo switch > /tmp/agentico-restart-flag; tmux kill-session -t "\$SESSION" 2>/dev/null; exit ;;
     esac
 done
 IDLESCRIPT
@@ -5488,7 +5513,7 @@ fi
 # Usage: bulletin_board_init "ProjectName"
 bulletin_board_init() {
     local project_name="$1"
-    local bulletin_dir="/tmp/agentic-bulletin/$project_name"
+    local bulletin_dir="/tmp/agentico-bulletin/$project_name"
     mkdir -p "$bulletin_dir"
     echo '{}' > "$bulletin_dir/board.json"
 }
@@ -5497,7 +5522,7 @@ bulletin_board_init() {
 # Usage: bulletin_board_cleanup "ProjectName"
 bulletin_board_cleanup() {
     local project_name="$1"
-    local bulletin_dir="/tmp/agentic-bulletin/$project_name"
+    local bulletin_dir="/tmp/agentico-bulletin/$project_name"
     rm -rf "$bulletin_dir"
 }
 
@@ -5524,7 +5549,7 @@ if [ "$AUTO_RELAY" = "true" ]; then
         RELAY_MAIN_DIR="${RELAY_MAIN_DIR/#\~/$HOME}"
         RELAY_NUM_SPEC=$(jq ".projects[$RELAY_PROJECT_IDX].specialists | length" "$CONFIG")
         [ $RELAY_NUM_SPEC -gt 12 ] && RELAY_NUM_SPEC=12
-        RELAY_PANE_MAP="/tmp/agentic-relay/$RELAY_PROJECT_NAME/pane-map.json"
+        RELAY_PANE_MAP="/tmp/agentico-relay/$RELAY_PROJECT_NAME/pane-map.json"
 
         # Build specialist info with pane targets and directories
         SPEC_INFO=""
@@ -5540,7 +5565,7 @@ if [ "$AUTO_RELAY" = "true" ]; then
         # NOTE: QB already reads .claude/qb-dispatch.md via CLAUDE.md on startup.
         # The relay watcher handles user prompts sent DURING a session (via Telegram/relay).
         # We do NOT send a startup dispatch message here — that caused duplicate dispatch prompts.
-        # The relay system at /tmp/agentic-relay/ handles ongoing prompt delivery separately.
+        # The relay system at /tmp/agentico-relay/ handles ongoing prompt delivery separately.
     fi
 fi
 
@@ -5604,15 +5629,15 @@ track_bg_pid $!
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Auto-kill session on detach (stop relay watchers, show final stats, kill session)
-tmux set-hook -t "$SESSION" client-detached "run-shell 'for pidfile in /tmp/agentic-relay/*/relay.pid; do [ -f \"\$pidfile\" ] && kill \$(cat \"\$pidfile\") 2>/dev/null; done; ~/.local/bin/agentic-stats --final 2>/dev/null; tmux kill-session -t $SESSION 2>/dev/null || true'"
+tmux set-hook -t "$SESSION" client-detached "run-shell 'for pidfile in /tmp/agentico-relay/*/relay.pid; do [ -f \"\$pidfile\" ] && kill \$(cat \"\$pidfile\") 2>/dev/null; done; ~/.local/bin/agentico-stats --final 2>/dev/null; tmux kill-session -t $SESSION 2>/dev/null || true'"
 
 # Home key (Ctrl+B, H) - detach and restart with project picker
-tmux bind-key -T prefix H run-shell "echo switch > /tmp/agentic-restart-flag; tmux detach-client"
+tmux bind-key -T prefix H run-shell "echo switch > /tmp/agentico-restart-flag; tmux detach-client"
 
 tmux attach -t $SESSION
 
 # Go back to homepage if quit or H was pressed, otherwise clean exit
-if [ -f /tmp/agentic-restart-flag ]; then
-    rm /tmp/agentic-restart-flag
+if [ -f /tmp/agentico-restart-flag ]; then
+    rm /tmp/agentico-restart-flag
     exec "$0" -s
 fi

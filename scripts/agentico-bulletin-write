@@ -1,6 +1,6 @@
 #!/bin/bash
 # Bulletin board writer for specialists
-# Usage: agentic-bulletin-write ProjectName specialist-role "files_created" "exports" "notes"
+# Usage: agentico-bulletin-write ProjectName specialist-role "files_created" "exports" "notes"
 #
 # Writes/updates the specialist's key in board.json using jq
 # files_created and exports are comma-separated strings that get converted to JSON arrays
@@ -12,11 +12,11 @@ EXPORTS="$4"
 NOTES="$5"
 
 if [ -z "$PROJECT" ] || [ -z "$ROLE" ]; then
-    echo "Usage: agentic-bulletin-write ProjectName specialist-role \"files_created\" \"exports\" \"notes\""
+    echo "Usage: agentico-bulletin-write ProjectName specialist-role \"files_created\" \"exports\" \"notes\""
     exit 1
 fi
 
-BULLETIN_DIR="/tmp/agentic-bulletin/$PROJECT"
+BULLETIN_DIR="/tmp/agentico-bulletin/$PROJECT"
 BOARD_FILE="$BULLETIN_DIR/board.json"
 
 # Ensure directory and board.json exist

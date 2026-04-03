@@ -1,10 +1,10 @@
 #!/bin/bash
 # Display token stats for a specific pane in tmux border
-# Usage: agentic-pane-stats %pane_id
+# Usage: agentico-pane-stats %pane_id
 
 PANE_ID="${1:-}"
-METRICS_FILE="$HOME/.config/agentic-metrics.json"
-CONFIG_FILE="$HOME/.config/agentic-config.json"
+METRICS_FILE="$HOME/.config/agentico-metrics.json"
+CONFIG_FILE="$HOME/.config/agentico-config.json"
 
 # Check if display is enabled (default: true if not set)
 if [ -f "$CONFIG_FILE" ]; then
@@ -24,7 +24,12 @@ fi
 # Use tmux session creation time as session key (matches capture-tokens hook)
 SESSION_CREATED=$(tmux display-message -p '#{session_created}' 2>/dev/null)
 if [ -n "$SESSION_CREATED" ]; then
-    SESSION_KEY=$(date -u -r "$SESSION_CREATED" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null)
+    # Cross-platform: macOS uses -r, Linux uses -d @
+    if [[ "$(uname)" == "Darwin" ]]; then
+        SESSION_KEY=$(date -u -r "$SESSION_CREATED" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null)
+    else
+        SESSION_KEY=$(date -u -d "@$SESSION_CREATED" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null)
+    fi
 else
     SESSION_KEY=$(date -u +"%Y-%m-%dT%H:00:00Z")
 fi

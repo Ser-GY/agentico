@@ -1,9 +1,9 @@
 #!/bin/bash
-# Agentic Multi-Agent Token Statistics CLI
-# Usage: agentic-stats [--history|--compare|--final|--reset|--toggle|--status]
+# Agentico Multi-Agent Token Statistics CLI
+# Usage: agentico-stats [--history|--compare|--final|--reset|--toggle|--status]
 
-METRICS_FILE="$HOME/.config/agentic-metrics.json"
-CONFIG_FILE="$HOME/.config/agentic-config.json"
+METRICS_FILE="$HOME/.config/agentico-metrics.json"
+CONFIG_FILE="$HOME/.config/agentico-config.json"
 
 # Check if token stats display is enabled (default: true)
 is_enabled() {
@@ -25,7 +25,7 @@ toggle_stats() {
         jq '.show_token_stats = false' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
         echo -e "${YELLOW}Token stats display: OFF${NC}"
         echo -e "${DIM}Stats will be hidden from tmux borders and status bar.${NC}"
-        echo -e "${DIM}Use 'agentic-stats' to still view reports manually.${NC}"
+        echo -e "${DIM}Use 'agentico-stats' to still view reports manually.${NC}"
     else
         jq '.show_token_stats = true' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
         echo -e "${GREEN}Token stats display: ON${NC}"
@@ -73,6 +73,26 @@ calc_cost() {
     printf "%.2f" $(echo "$input_cost + $output_cost" | bc)
 }
 
+# Cross-platform: parse ISO 8601 UTC timestamp to epoch seconds
+parse_utc_ts() {
+    local ts="$1"
+    if [[ "$(uname)" == "Darwin" ]]; then
+        TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%SZ" "$ts" "+%s" 2>/dev/null || echo "0"
+    else
+        date -d "$ts" "+%s" 2>/dev/null || echo "0"
+    fi
+}
+
+# Cross-platform: convert epoch to local datetime string
+epoch_to_local() {
+    local epoch="$1"
+    if [[ "$(uname)" == "Darwin" ]]; then
+        date -r "$epoch" "+%Y-%m-%d %H:%M" 2>/dev/null || echo "--"
+    else
+        date -d "@$epoch" "+%Y-%m-%d %H:%M" 2>/dev/null || echo "--"
+    fi
+}
+
 show_current_session() {
     if [ ! -f "$METRICS_FILE" ]; then
         echo -e "${DIM}No metrics data found.${NC}"
@@ -94,8 +114,7 @@ show_current_session() {
 
     # Calculate duration (timestamps are UTC)
     if [ -n "$STARTED" ]; then
-        # Parse UTC timestamp and convert to epoch
-        START_TS=$(TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%SZ" "$STARTED" "+%s" 2>/dev/null || echo "0")
+        START_TS=$(parse_utc_ts "$STARTED")
         NOW_TS=$(date "+%s")
         if [ "$START_TS" -gt 0 ]; then
             DURATION_SEC=$((NOW_TS - START_TS))
@@ -112,10 +131,11 @@ show_current_session() {
 
     echo ""
     echo -e "${BOLD}═══════════════════════════════════════════════════════${NC}"
-    echo -e "${BOLD}  AGENTIC SESSION REPORT - ${CYAN}$PROJECT${NC}"
+    echo -e "${BOLD}  AGENTICO SESSION REPORT - ${CYAN}$PROJECT${NC}"
     # Convert UTC timestamp to local time for display
     if [ -n "$STARTED" ]; then
-        LOCAL_START=$(TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%SZ" "$STARTED" "+%s" 2>/dev/null | xargs -I{} date -r {} "+%Y-%m-%d %H:%M")
+        START_EPOCH=$(parse_utc_ts "$STARTED")
+        LOCAL_START=$(epoch_to_local "$START_EPOCH")
     else
         LOCAL_START="--"
     fi
@@ -161,7 +181,7 @@ show_current_session() {
 
     # Cost comparison
     if [ "$TOTAL_INPUT" -gt 0 ] || [ "$TOTAL_CACHE" -gt 0 ]; then
-        # AGENTIC: fresh input at full price, cache reads at 90% discount
+        # AGENTICO: fresh input at full price, cache reads at 90% discount
         AGENTIC_INPUT_COST=$(echo "scale=6; $TOTAL_INPUT * 0.000003 + $TOTAL_CACHE * 0.0000003" | bc)
         AGENTIC_OUTPUT_COST=$(echo "scale=6; $TOTAL_OUTPUT * 0.000015" | bc)
         AGENTIC_TOTAL=$(printf "%.2f" $(echo "$AGENTIC_INPUT_COST + $AGENTIC_OUTPUT_COST" | bc))
@@ -184,7 +204,7 @@ show_current_session() {
         echo -e "${BOLD}  │            COST COMPARISON                      │${NC}"
         echo -e "${BOLD}  ├─────────────────────────────────────────────────┤${NC}"
         echo -e "${BOLD}  │                                                 │${NC}"
-        printf   "  │   ${CYAN}%-18s${NC}          ${YELLOW}${BOLD}\$%-8s${NC}     │\n" "AGENTIC (actual)" "$AGENTIC_TOTAL"
+        printf   "  │   ${CYAN}%-18s${NC}          ${YELLOW}${BOLD}\$%-8s${NC}     │\n" "AGENTICO (actual)" "$AGENTIC_TOTAL"
         echo -e "${BOLD}  │                                                 │${NC}"
         printf   "  │   ${DIM}%-18s${NC}          ${DIM}\$%-8s${NC}     │\n" "Single-agent (est)" "$SINGLE_TOTAL"
         echo -e "${BOLD}  │                                                 │${NC}"
@@ -211,7 +231,7 @@ show_history() {
 
     echo ""
     echo -e "${BOLD}═══════════════════════════════════════════════════════${NC}"
-    echo -e "${BOLD}  AGENTIC SESSION HISTORY${NC}"
+    echo -e "${BOLD}  AGENTICO SESSION HISTORY${NC}"
     echo -e "${BOLD}═══════════════════════════════════════════════════════${NC}"
     echo ""
 
@@ -232,7 +252,7 @@ show_history() {
 
 show_final() {
     show_current_session
-    echo -e "${DIM}Session ended. Thank you for using Agentic!${NC}"
+    echo -e "${DIM}Session ended. Thank you for using Agentico!${NC}"
     echo ""
 }
 
@@ -282,7 +302,7 @@ case "${1:-}" in
         show_status
         ;;
     --help)
-        echo "Usage: agentic-stats [OPTION]"
+        echo "Usage: agentico-stats [OPTION]"
         echo ""
         echo "Options:"
         echo "  (none)      Show current session stats"

@@ -1,14 +1,14 @@
 #!/bin/bash
-# agentic-skill-write — Persistent specialist skill logger
-# Usage: agentic-skill-write role "task description" "approach description" "file1,file2,file3"
+# agentico-skill-write — Persistent specialist skill logger
+# Usage: agentico-skill-write role "task description" "approach description" "file1,file2,file3"
 #
-# Appends a skill entry to ~/.config/agentic-skills/{role}.json
+# Appends a skill entry to ~/.config/agentico-skills/{role}.json
 # Creates the file if it doesn't exist. Caps at 50 entries (removes oldest).
 
 set -euo pipefail
 
 if [ $# -lt 4 ]; then
-    echo "Usage: agentic-skill-write <role> <task> <approach> <key_files>"
+    echo "Usage: agentico-skill-write <role> <task> <approach> <key_files>"
     echo "  role       - specialist role name (e.g., frontend, backend, dsp)"
     echo "  task       - what you built (one line)"
     echo "  approach   - how you built it (2-3 sentences)"
@@ -22,7 +22,7 @@ APPROACH="$3"
 KEY_FILES_CSV="$4"
 TODAY=$(date +%Y-%m-%d)
 
-SKILLS_DIR="$HOME/.config/agentic-skills"
+SKILLS_DIR="$HOME/.config/agentico-skills"
 SKILLS_FILE="$SKILLS_DIR/$ROLE.json"
 
 mkdir -p "$SKILLS_DIR"

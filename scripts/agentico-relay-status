@@ -1,9 +1,9 @@
 #!/bin/bash
-# Tmux status bar widget for agentic-relay
+# Tmux status bar widget for agentico-relay
 # Called by tmux status-right every 5 seconds
 # Outputs short string like [relay:3/3] or empty if not active
 
-RELAY_BASE="/tmp/agentic-relay"
+RELAY_BASE="/tmp/agentico-relay"
 
 # Quick exit if no relay data
 [ -d "$RELAY_BASE" ] || exit 0
