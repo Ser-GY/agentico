@@ -253,29 +253,31 @@ install_scripts() {
             fi
         done
     else
-        # Remote mode: download compiled binaries from latest GitHub release
-        info "Downloading binaries from latest release..."
-        if [ "$OS" = "macos" ]; then
-            local RELEASE_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/agentico-macos-arm64.tar.gz"
-        else
-            local RELEASE_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/agentico-linux.tar.gz"
-        fi
-        local TEMP_DIR=$(mktemp -d)
-        local TARBALL="$TEMP_DIR/agentico.tar.gz"
-
-        if curl -fsSL "$RELEASE_URL" -o "$TARBALL" 2>/dev/null; then
-            tar -xzf "$TARBALL" -C "$TEMP_DIR"
-            for bin in "$TEMP_DIR"/*; do
-                local name=$(basename "$bin")
-                if [ "$name" != "agentic.tar.gz" ] && [ -f "$bin" ]; then
-                    cp "$bin" "$INSTALL_DIR/$name"
-                    chmod +x "$INSTALL_DIR/$name"
-                    success "Installed $name"
-                fi
-            done
-            rm -rf "$TEMP_DIR"
-        else
-            fail "Could not download release. Check your internet connection."
+        # Remote mode: download each script individually from raw GitHub
+        info "Downloading scripts from GitHub..."
+        local scripts=(
+            "agentico"
+            "agentico-stats"
+            "agentico-session-stats"
+            "agentico-pane-stats"
+            "agentico-relay"
+            "agentico-relay-status"
+            "agentico-bulletin-write"
+            "agentico-skill-write"
+            "agentico-watcher"
+        )
+        local any_failed=0
+        for script in "${scripts[@]}"; do
+            if download_file "scripts/$script" "$INSTALL_DIR/$script"; then
+                chmod +x "$INSTALL_DIR/$script"
+                success "Installed $script"
+            else
+                warn "Could not download $script (skipping)"
+                any_failed=1
+            fi
+        done
+        if [ "$any_failed" -eq 1 ]; then
+            warn "Some scripts could not be downloaded. Check your internet connection."
         fi
     fi
 
