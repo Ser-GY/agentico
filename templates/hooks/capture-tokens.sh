@@ -9,6 +9,7 @@
 set -euo pipefail
 
 METRICS_FILE="$HOME/.config/agentic-metrics.json"
+TOKEN_LOG="$HOME/.config/agentic-token-log.jsonl"
 
 # Require jq (agentic dependency — should always be present)
 if ! command -v jq &>/dev/null; then
@@ -74,3 +75,16 @@ jq \
     .totals.sessions                    = ((.totals.sessions                    // 0) + 1)
     ' "$METRICS_FILE" > "${METRICS_FILE}.tmp" \
     && mv "${METRICS_FILE}.tmp" "$METRICS_FILE"
+
+# Append a single JSONL record for this session (one line per session, easy to grep/tail)
+mkdir -p "$(dirname "$TOKEN_LOG")"
+printf '%s\n' "$(jq -nc \
+    --arg session_id  "$session_id" \
+    --arg timestamp   "$timestamp" \
+    --arg model       "$model" \
+    --argjson in_tok  "$input_tokens" \
+    --argjson out_tok "$output_tokens" \
+    --argjson c_read  "$cache_read" \
+    --argjson c_write "$cache_write" \
+    '{session_id:$session_id,timestamp:$timestamp,model:$model,input_tokens:$in_tok,output_tokens:$out_tok,cache_read_input_tokens:$c_read,cache_creation_input_tokens:$c_write}'
+)" >> "$TOKEN_LOG"
