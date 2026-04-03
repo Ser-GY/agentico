@@ -47,6 +47,61 @@ detect_os() {
     info "Detected OS: $OS"
 }
 
+# ─── Detect Package Manager ───────────────────────────────────────────────────
+
+detect_pkg_manager() {
+    if [ "$OS" = "macos" ]; then
+        if command -v brew &>/dev/null; then
+            PKG_MANAGER="brew"
+        else
+            PKG_MANAGER="none"
+        fi
+        return
+    fi
+
+    # Linux: probe in order of prevalence
+    if   command -v apt-get &>/dev/null; then PKG_MANAGER="apt"
+    elif command -v dnf     &>/dev/null; then PKG_MANAGER="dnf"
+    elif command -v yum     &>/dev/null; then PKG_MANAGER="yum"
+    elif command -v pacman  &>/dev/null; then PKG_MANAGER="pacman"
+    elif command -v zypper  &>/dev/null; then PKG_MANAGER="zypper"
+    elif command -v apk     &>/dev/null; then PKG_MANAGER="apk"
+    else                                      PKG_MANAGER="unknown"
+    fi
+    info "Detected package manager: $PKG_MANAGER"
+}
+
+# Return the right install command for a given package name
+pkg_hint() {
+    local pkg="$1"
+    case "$PKG_MANAGER" in
+        brew)    echo "brew install $pkg" ;;
+        apt)     echo "sudo apt install $pkg" ;;
+        dnf)     echo "sudo dnf install $pkg" ;;
+        yum)     echo "sudo yum install $pkg" ;;
+        pacman)  echo "sudo pacman -S $pkg" ;;
+        zypper)  echo "sudo zypper install $pkg" ;;
+        apk)     echo "sudo apk add $pkg" ;;
+        none)    echo "install Homebrew first: https://brew.sh — then: brew install $pkg" ;;
+        *)       echo "install $pkg via your system package manager" ;;
+    esac
+}
+
+# Return the command to install multiple packages at once
+pkg_hint_multi() {
+    local pkgs="$*"
+    case "$PKG_MANAGER" in
+        brew)    echo "brew install $pkgs" ;;
+        apt)     echo "sudo apt install $pkgs" ;;
+        dnf)     echo "sudo dnf install $pkgs" ;;
+        yum)     echo "sudo yum install $pkgs" ;;
+        pacman)  echo "sudo pacman -S $pkgs" ;;
+        zypper)  echo "sudo zypper install $pkgs" ;;
+        apk)     echo "sudo apk add $pkgs" ;;
+        *)       echo "" ;;
+    esac
+}
+
 # ─── Check Dependencies ──────────────────────────────────────────────────────
 
 check_dependency() {
@@ -69,32 +124,36 @@ check_dependencies() {
     echo ""
 
     local missing=0
+    local missing_pkgs=()
 
     # tmux
-    if ! check_dependency tmux "tmux" \
-        "$([ "$OS" = "macos" ] && echo "brew install tmux" || echo "sudo apt install tmux  OR  sudo yum install tmux")"; then
-        missing=1
+    if ! check_dependency tmux "tmux" "$(pkg_hint tmux)"; then
+        missing=1; missing_pkgs+=(tmux)
     fi
 
     # jq
-    if ! check_dependency jq "jq" \
-        "$([ "$OS" = "macos" ] && echo "brew install jq" || echo "sudo apt install jq  OR  sudo yum install jq")"; then
-        missing=1
+    if ! check_dependency jq "jq" "$(pkg_hint jq)"; then
+        missing=1; missing_pkgs+=(jq)
     fi
 
-    # git
-    if ! check_dependency git "git" \
-        "$([ "$OS" = "macos" ] && echo "xcode-select --install" || echo "sudo apt install git  OR  sudo yum install git")"; then
+    # git — on macOS, Xcode CLT is the canonical path even if brew is present
+    local git_hint
+    if [ "$OS" = "macos" ]; then
+        git_hint="xcode-select --install"
+    else
+        git_hint="$(pkg_hint git)"
+    fi
+    if ! check_dependency git "git" "$git_hint"; then
         missing=1
+        [ "$OS" != "macos" ] && missing_pkgs+=(git)
     fi
 
-    # curl (needed for remote download)
-    if ! check_dependency curl "curl" \
-        "$([ "$OS" = "macos" ] && echo "brew install curl" || echo "sudo apt install curl  OR  sudo yum install curl")"; then
-        missing=1
+    # curl
+    if ! check_dependency curl "curl" "$(pkg_hint curl)"; then
+        missing=1; missing_pkgs+=(curl)
     fi
 
-    # Claude CLI
+    # Claude CLI — npm, not a system package
     if ! check_dependency claude "Claude CLI" \
         "npm install -g @anthropic-ai/claude-code  (requires Claude Pro subscription)"; then
         missing=1
@@ -103,6 +162,17 @@ check_dependencies() {
     echo ""
 
     if [ "$missing" -eq 1 ]; then
+        # If multiple system packages are missing, print a ready-to-paste one-liner
+        if [ "${#missing_pkgs[@]}" -gt 1 ]; then
+            local one_liner
+            one_liner="$(pkg_hint_multi "${missing_pkgs[@]}")"
+            if [ -n "$one_liner" ]; then
+                echo -e "  ${CYAN}Install all missing packages at once:${NC}"
+                echo -e "    ${BOLD}$one_liner${NC}"
+                echo ""
+            fi
+        fi
+
         warn "Some dependencies are missing. Install them and re-run this script."
         # In pipe mode (curl | bash), stdin is not a TTY — skip interactive prompt and continue
         if [ -t 0 ]; then
@@ -405,6 +475,7 @@ configure_claude_settings() {
 main() {
     print_header
     detect_os
+    detect_pkg_manager
     find_scripts_dir
     echo ""
     check_dependencies
