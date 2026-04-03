@@ -1,6 +1,6 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════════════════════
-# Agentic Installer -- macOS
+# Agentic Installer -- macOS & Linux
 # Supports both: curl -fsSL https://raw.githubusercontent.com/EliCrossDev/agentic/main/install.sh | bash
 #            and: ./install.sh  (from a cloned repo)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -42,7 +42,7 @@ detect_os() {
     case "$(uname -s)" in
         Darwin*) OS="macos" ;;
         Linux*)  OS="linux" ;;
-        *)       fail "Unsupported operating system: $(uname -s). Use macOS or Windows (via WSL)." ;;
+        *)       fail "Unsupported operating system: $(uname -s). Agentic requires macOS or Linux." ;;
     esac
     info "Detected OS: $OS"
 }
@@ -210,10 +210,11 @@ install_scripts() {
     fi
 
     # Ensure PATH is set in ALL relevant shell profiles (fixes "command not found" on fresh installs)
+    # Use grep-based shell detection so /usr/bin/zsh, /usr/bin/bash, etc. are all caught.
     local path_line='export PATH="$HOME/.local/bin:$PATH"'
     local profiles_updated=0
 
-    if [ "${SHELL:-}" = "/bin/zsh" ] || [ -f "$HOME/.zshrc" ] || [ -f "$HOME/.zprofile" ]; then
+    if echo "${SHELL:-}" | grep -q "zsh" || [ -f "$HOME/.zshrc" ] || [ -f "$HOME/.zprofile" ]; then
         # Add to .zprofile (login shells — new Terminal windows)
         if ! grep -q '\.local/bin' "$HOME/.zprofile" 2>/dev/null; then
             echo "$path_line" >> "$HOME/.zprofile"
@@ -224,13 +225,25 @@ install_scripts() {
             echo "$path_line" >> "$HOME/.zshrc"
             profiles_updated=1
         fi
-    elif [ "${SHELL:-}" = "/bin/bash" ]; then
+    fi
+
+    if echo "${SHELL:-}" | grep -q "bash" || [ -f "$HOME/.bashrc" ] || [ -f "$HOME/.bash_profile" ]; then
         if ! grep -q '\.local/bin' "$HOME/.bashrc" 2>/dev/null; then
             echo "$path_line" >> "$HOME/.bashrc"
             profiles_updated=1
         fi
         if ! grep -q '\.local/bin' "$HOME/.bash_profile" 2>/dev/null; then
             echo "$path_line" >> "$HOME/.bash_profile"
+            profiles_updated=1
+        fi
+    fi
+
+    # Fallback for other shells (fish, dash, etc.): update ~/.profile
+    if ! echo "${SHELL:-}" | grep -qE "(zsh|bash)" && \
+       [ ! -f "$HOME/.zshrc" ] && [ ! -f "$HOME/.zprofile" ] && \
+       [ ! -f "$HOME/.bashrc" ] && [ ! -f "$HOME/.bash_profile" ]; then
+        if ! grep -q '\.local/bin' "$HOME/.profile" 2>/dev/null; then
+            echo "$path_line" >> "$HOME/.profile"
             profiles_updated=1
         fi
     fi
@@ -334,10 +347,21 @@ configure_claude_settings() {
     local hook_script="$claude_dir/hooks/capture-tokens.sh"
 
     mkdir -p "$claude_dir/hooks"
-    # Copy capture-tokens hook to .claude/hooks if it exists in install dir
-    if [ -f "$INSTALL_DIR/agentic-capture-tokens" ] && [ ! -f "$hook_script" ]; then
-        cp "$INSTALL_DIR/agentic-capture-tokens" "$hook_script"
-        chmod +x "$hook_script"
+
+    # Install capture-tokens hook if not already present.
+    # Priority: (1) compiled binary from INSTALL_DIR, (2) shell script from templates.
+    if [ ! -f "$hook_script" ]; then
+        if [ -f "$INSTALL_DIR/agentic-capture-tokens" ]; then
+            cp "$INSTALL_DIR/agentic-capture-tokens" "$hook_script"
+            chmod +x "$hook_script"
+        elif [ "$INSTALL_MODE" = "local" ] && [ -f "$TEMPLATES_DIR/hooks/capture-tokens.sh" ]; then
+            cp "$TEMPLATES_DIR/hooks/capture-tokens.sh" "$hook_script"
+            chmod +x "$hook_script"
+        elif [ "$INSTALL_MODE" = "remote" ]; then
+            if download_file "templates/hooks/capture-tokens.sh" "$hook_script"; then
+                chmod +x "$hook_script"
+            fi
+        fi
     fi
 
     # Build the desired settings with teammateMode and Stop hook

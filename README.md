@@ -17,12 +17,32 @@ One command. Multiple AI agents. All working in parallel on your project — vis
 
 ## Install
 
-**macOS:**
+**macOS / Linux:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/EliCrossDev/agentic/main/install.sh | bash
 ```
 
-**Requirements:** macOS or Linux, Node.js 18+, Claude CLI (`npm install -g @anthropic-ai/claude-code`)
+**Requirements:** Node.js 18+, Claude CLI (`npm install -g @anthropic-ai/claude-code`), tmux, jq
+
+### Linux prerequisites
+
+Install the required system packages before running the installer:
+
+**Debian / Ubuntu:**
+```bash
+sudo apt update && sudo apt install -y tmux jq git curl
+```
+
+**RHEL / CentOS / Fedora:**
+```bash
+# dnf (Fedora, RHEL 8+, CentOS Stream)
+sudo dnf install -y tmux jq git curl
+
+# yum (RHEL 7 / CentOS 7)
+sudo yum install -y tmux jq git curl
+```
+
+**Other distros:** install `tmux`, `jq`, `git`, and `curl` via your package manager, then re-run the installer.
 
 ---
 
