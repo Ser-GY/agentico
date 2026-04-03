@@ -1,7 +1,7 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════════════════════
-# Agentic Installer -- macOS & Linux
-# Supports both: curl -fsSL https://raw.githubusercontent.com/EliCrossDev/agentic/main/install.sh | bash
+# Agentico Installer -- macOS & Linux
+# Supports both: curl -fsSL https://raw.githubusercontent.com/Ser-GY/agentico/main/install.sh | bash
 #            and: ./install.sh  (from a cloned repo)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -19,14 +19,14 @@ INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config"
 CONFIG_FILE="$CONFIG_DIR/agents-projects.json"
 
-GITHUB_REPO="EliCrossDev/agentic"
+GITHUB_REPO="Ser-GY/agentico"
 GITHUB_BRANCH="main"
 RAW_BASE="https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}"
 
 print_header() {
     echo ""
     echo -e "${CYAN}${BOLD}  ═══════════════════════════════════════════════════${NC}"
-    echo -e "${CYAN}${BOLD}     AGENTIC -- Multi-Agent Development Environment ${NC}"
+    echo -e "${CYAN}${BOLD}     AGENTICO -- Multi-Agent Development Environment ${NC}"
     echo -e "${CYAN}${BOLD}  ═══════════════════════════════════════════════════${NC}"
     echo ""
 }
@@ -233,15 +233,15 @@ install_scripts() {
     if [ "$INSTALL_MODE" = "local" ]; then
         # Local mode: copy from cloned repo
         local scripts=(
-            "agentic"
-            "agentic-stats"
-            "agentic-session-stats"
-            "agentic-pane-stats"
-            "agentic-relay"
-            "agentic-relay-status"
-            "agentic-bulletin-write"
-            "agentic-skill-write"
-            "agentic-watcher"
+            "agentico"
+            "agentico-stats"
+            "agentico-session-stats"
+            "agentico-pane-stats"
+            "agentico-relay"
+            "agentico-relay-status"
+            "agentico-bulletin-write"
+            "agentico-skill-write"
+            "agentico-watcher"
         )
         for script in "${scripts[@]}"; do
             if [ -f "$SCRIPTS_DIR/$script" ]; then
@@ -256,12 +256,12 @@ install_scripts() {
         # Remote mode: download compiled binaries from latest GitHub release
         info "Downloading binaries from latest release..."
         if [ "$OS" = "macos" ]; then
-            local RELEASE_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/agentic-macos-arm64.tar.gz"
+            local RELEASE_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/agentico-macos-arm64.tar.gz"
         else
-            local RELEASE_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/agentic-linux.tar.gz"
+            local RELEASE_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/agentico-linux.tar.gz"
         fi
         local TEMP_DIR=$(mktemp -d)
-        local TARBALL="$TEMP_DIR/agentic.tar.gz"
+        local TARBALL="$TEMP_DIR/agentico.tar.gz"
 
         if curl -fsSL "$RELEASE_URL" -o "$TARBALL" 2>/dev/null; then
             tar -xzf "$TARBALL" -C "$TEMP_DIR"
@@ -368,9 +368,9 @@ EOF
         success "Created default config at $CONFIG_FILE"
     fi
 
-    # Create agentic-config.json for cost tracker display
-    if [ ! -f "$CONFIG_DIR/agentic-config.json" ]; then
-        cat > "$CONFIG_DIR/agentic-config.json" << 'EOF'
+    # Create agentico-config.json for cost tracker display
+    if [ ! -f "$CONFIG_DIR/agentico-config.json" ]; then
+        cat > "$CONFIG_DIR/agentico-config.json" << 'EOF'
 {
   "show_token_stats": true
 }
@@ -379,8 +379,8 @@ EOF
     fi
 
     # Create initial metrics file so cost calculator shows from first launch
-    if [ ! -f "$CONFIG_DIR/agentic-metrics.json" ]; then
-        echo '{}' > "$CONFIG_DIR/agentic-metrics.json"
+    if [ ! -f "$CONFIG_DIR/agentico-metrics.json" ]; then
+        echo '{}' > "$CONFIG_DIR/agentico-metrics.json"
     fi
 }
 
@@ -421,8 +421,8 @@ configure_claude_settings() {
     # Install capture-tokens hook if not already present.
     # Priority: (1) compiled binary from INSTALL_DIR, (2) shell script from templates.
     if [ ! -f "$hook_script" ]; then
-        if [ -f "$INSTALL_DIR/agentic-capture-tokens" ]; then
-            cp "$INSTALL_DIR/agentic-capture-tokens" "$hook_script"
+        if [ -f "$INSTALL_DIR/agentico-capture-tokens" ]; then
+            cp "$INSTALL_DIR/agentico-capture-tokens" "$hook_script"
             chmod +x "$hook_script"
         elif [ "$INSTALL_MODE" = "local" ] && [ -f "$TEMPLATES_DIR/hooks/capture-tokens.sh" ]; then
             cp "$TEMPLATES_DIR/hooks/capture-tokens.sh" "$hook_script"
@@ -496,7 +496,7 @@ main() {
     echo -e "  ${BOLD}Next steps:${NC}"
     echo ""
     echo -e "  Just run:"
-    echo -e "     ${CYAN}agentic${NC}"
+    echo -e "     ${CYAN}agentico${NC}"
     echo ""
     echo -e "  The built-in menu will guide you through creating your first project."
     echo ""

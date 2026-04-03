@@ -196,7 +196,7 @@ agentico [OPTIONS]
 Agentico installs several helper binaries alongside the main `agentico` command. All are placed in `~/.local/bin/`.
 
 ### `agentico-stats`
-Prints a summary of token usage and estimated cost across all agents in the current session. Reads from `~/.config/agentic-metrics.json`.
+Prints a summary of token usage and estimated cost across all agents in the current session. Reads from `~/.config/agentico-metrics.json`.
 
 ```bash
 agentico-stats
@@ -262,7 +262,7 @@ The status bar at the bottom of each Claude pane shows:
 - Remaining context window (color-coded: green > 50%, yellow > 20%, red below)
 - Current time and date
 
-To disable the cost tracker display, set `"show_token_stats": false` in `~/.config/agentic-config.json`.
+To disable the cost tracker display, set `"show_token_stats": false` in `~/.config/agentico-config.json`.
 
 ---
 

@@ -1,17 +1,17 @@
 #!/bin/bash
 # capture-tokens.sh — Claude Code Stop hook
-# Captures token usage data from each session for agentic cost tracking.
-# Installed to ~/.claude/hooks/capture-tokens.sh by the agentic installer.
+# Captures token usage data from each session for agentico cost tracking.
+# Installed to ~/.claude/hooks/capture-tokens.sh by the agentico installer.
 #
 # Claude Code calls this script automatically when a session ends, passing
 # session data as JSON on stdin.
 
 set -euo pipefail
 
-METRICS_FILE="$HOME/.config/agentic-metrics.json"
-TOKEN_LOG="$HOME/.config/agentic-token-log.jsonl"
+METRICS_FILE="$HOME/.config/agentico-metrics.json"
+TOKEN_LOG="$HOME/.config/agentico-token-log.jsonl"
 
-# Require jq (agentic dependency — should always be present)
+# Require jq (agentico dependency — should always be present)
 if ! command -v jq &>/dev/null; then
     exit 0
 fi
