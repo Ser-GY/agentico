@@ -1,0 +1,56 @@
+#!/bin/bash
+# agentic-skill-write — Persistent specialist skill logger
+# Usage: agentic-skill-write role "task description" "approach description" "file1,file2,file3"
+#
+# Appends a skill entry to ~/.config/agentic-skills/{role}.json
+# Creates the file if it doesn't exist. Caps at 50 entries (removes oldest).
+
+set -euo pipefail
+
+if [ $# -lt 4 ]; then
+    echo "Usage: agentic-skill-write <role> <task> <approach> <key_files>"
+    echo "  role       - specialist role name (e.g., frontend, backend, dsp)"
+    echo "  task       - what you built (one line)"
+    echo "  approach   - how you built it (2-3 sentences)"
+    echo "  key_files  - comma-separated list of main files created"
+    exit 1
+fi
+
+ROLE="$1"
+TASK="$2"
+APPROACH="$3"
+KEY_FILES_CSV="$4"
+TODAY=$(date +%Y-%m-%d)
+
+SKILLS_DIR="$HOME/.config/agentic-skills"
+SKILLS_FILE="$SKILLS_DIR/$ROLE.json"
+
+mkdir -p "$SKILLS_DIR"
+
+# Convert comma-separated files to JSON array
+KEY_FILES_JSON=$(echo "$KEY_FILES_CSV" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | jq -R . | jq -s .)
+
+# Build the new skill entry
+NEW_SKILL=$(jq -n \
+    --arg task "$TASK" \
+    --arg approach "$APPROACH" \
+    --argjson key_files "$KEY_FILES_JSON" \
+    --arg date "$TODAY" \
+    '{task: $task, approach: $approach, key_files: $key_files, date: $date}')
+
+if [ ! -f "$SKILLS_FILE" ]; then
+    # Create new file with skills array
+    echo "$NEW_SKILL" | jq '{skills: [.]}' > "$SKILLS_FILE"
+else
+    # Read existing, trim to 49 if at 50, then append
+    CURRENT_COUNT=$(jq '.skills | length' "$SKILLS_FILE" 2>/dev/null || echo 0)
+    if [ "$CURRENT_COUNT" -ge 50 ]; then
+        # Remove the oldest entry (first in array) before adding
+        jq --argjson new "$NEW_SKILL" '.skills = (.skills[1:] + [$new])' "$SKILLS_FILE" > "${SKILLS_FILE}.tmp"
+    else
+        jq --argjson new "$NEW_SKILL" '.skills += [$new]' "$SKILLS_FILE" > "${SKILLS_FILE}.tmp"
+    fi
+    mv "${SKILLS_FILE}.tmp" "$SKILLS_FILE"
+fi
+
+echo "Skill saved for $ROLE: $TASK"

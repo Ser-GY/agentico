@@ -1,0 +1,36 @@
+#!/bin/bash
+# Zero-token completion watcher
+# Usage: agentic-watcher ProjectName specialist1,specialist2,specialist3
+#
+# Watches for .done files at /tmp/agentic-bulletin/{ProjectName}/{specialist}.done
+# When all specialists have .done files, writes WAVE_COMPLETE trigger
+# Pure bash, no LLM calls, zero tokens
+
+PROJECT="$1"
+SPECIALISTS=(${2//,/ })
+BULLETIN_DIR="/tmp/agentic-bulletin/$PROJECT"
+
+if [ -z "$PROJECT" ] || [ ${#SPECIALISTS[@]} -eq 0 ]; then
+    echo "Usage: agentic-watcher ProjectName specialist1,specialist2,specialist3"
+    exit 1
+fi
+
+# Ensure bulletin directory exists
+mkdir -p "$BULLETIN_DIR"
+
+while true; do
+    ALL_DONE=true
+    for spec in "${SPECIALISTS[@]}"; do
+        if [ ! -f "$BULLETIN_DIR/${spec}.done" ]; then
+            ALL_DONE=false
+            break
+        fi
+    done
+
+    if [ "$ALL_DONE" = true ]; then
+        touch "$BULLETIN_DIR/WAVE_COMPLETE"
+        exit 0
+    fi
+
+    sleep 5
+done
